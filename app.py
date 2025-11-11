@@ -55,6 +55,34 @@ def generate_financial_viz(financials):
     
     plt.tight_layout()
     
-    # Base64 encode
+    # Base64 encode (FULL LINE FIXED—no truncation)
     buf = io.BytesIO()
-    plt.savefig(buf
+    plt.savefig(buf, format='png', dpi=300, bbox_inches='tight')
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close(fig)
+    return f"![Financial Viz](data:image/png;base64,{img_base64})"
+
+def parse_financials_from_file(uploaded_file):
+    """Beefed: Parse CSV for CAPEX/NPV/EBITDA/DSCR/IRR + Revenue_Y1-3. Cols: 'Metric', 'Value'."""
+    try:
+        df = pd.read_csv(uploaded_file)
+        
+        financials = {}
+        for _, row in df.iterrows():
+            metric = str(row.get('Metric', '')).strip().upper()
+            value = float(row.get('Value', 0))
+            if 'CAPEX' in metric:
+                financials['capex'] = value
+            elif 'NPV' in metric:
+                financials['npv'] = value
+            elif 'EBITDA' in metric:
+                financials['ebitda'] = value
+            elif 'DSCR' in metric:
+                financials['dscr'] = value
+            elif 'IRR' in metric:
+                financials['irr'] = value
+            elif 'REVENUE_Y1' in metric:
+                financials['revenue_y1'] = value
+            elif 'REVENUE_Y2' in metric:
+                financial
