@@ -37,24 +37,4 @@ def generate_financial_viz(financials):
     
     # Right: Revenue Line (if data exists)
     revenues = [financials.get(f'revenue_y{i}', 0) for i in range(1, 4)]
-    if any(revenues):  # Only plot if revenue data
-        years = ['Y1', 'Y2', 'Y3']
-        ax2.plot(years, revenues, marker='o', linewidth=2.5, color='#FFD93D', markersize=8)
-        ax2.fill_between(years, revenues, alpha=0.3, color='#FFD93D')
-        ax2.set_title('Revenue Projections ($M)', fontsize=14, fontweight='bold')
-        ax2.set_ylabel('Revenue', fontsize=10)
-        ax2.grid(axis='y', linestyle='--', alpha=0.7)
-        
-        # Value labels on points (rounded)
-        for i, (year, rev) in enumerate(zip(years, revenues)):
-            rounded_rev = round(rev, 2)
-            ax2.annotate(f'${rounded_rev}M', (year, rev), textcoords="offset points", xytext=(0,10), ha='center', fontsize=9)
-    else:
-        ax2.text(0.5, 0.5, 'No Revenue Data\n(Add Revenue_Y1-3 to CSV)', ha='center', va='center', transform=ax2.transAxes)
-        ax2.set_title('Revenue Projections', fontsize=14, fontweight='bold')
-    
-    plt.tight_layout()
-    
-    # Base64 encode
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=300
+    if any(revenues):  # Only
