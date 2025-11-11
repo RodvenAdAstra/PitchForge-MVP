@@ -31,4 +31,21 @@ def generate_financial_viz(financials):
         height = bar.get_height()
         # FIXED: Round floats to 2 decimals for clean labels
         rounded_val = round(val, 2) if isinstance(val, float) else val
-        label = f'${rounded
+        label = f'${rounded_val}M' if '$M' in kpi_metrics[kpi_values.index(val)] else f'{rounded_val}%' if '%' in kpi_metrics[kpi_values.index(val)] else f'{rounded_val}x'
+        ax1.text(bar.get_x() + bar.get_width()/2., height + 0.05,
+                 label, ha='center', va='bottom', fontsize=9)
+    
+    # Right: Revenue Line (if data exists)
+    revenues = [financials.get(f'revenue_y{i}', 0) for i in range(1, 4)]
+    if any(revenues):  # Only plot if revenue data
+        years = ['Y1', 'Y2', 'Y3']
+        ax2.plot(years, revenues, marker='o', linewidth=2.5, color='#FFD93D', markersize=8)
+        ax2.fill_between(years, revenues, alpha=0.3, color='#FFD93D')
+        ax2.set_title('Revenue Projections ($M)', fontsize=14, fontweight='bold')
+        ax2.set_ylabel('Revenue', fontsize=10)
+        ax2.grid(axis='y', linestyle='--', alpha=0.7)
+        
+        # Value labels on points (rounded)
+        for i, (year, rev) in enumerate(zip(years, revenues)):
+            rounded_rev = round(rev, 2)
+            ax2.annotate(f'${rounded_rev}M', (year, rev), textcoords="offset
