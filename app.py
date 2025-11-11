@@ -90,29 +90,4 @@ def parse_financials_from_file(uploaded_file):
                 financials['revenue_y3'] = value
         
         # Preview message (conditional DSCR, rounded)
-        rev_summary = f"Y1:${round(financials.get('revenue_y1',0),2)}M | Y2:${round(financials.get('revenue_y2',0),2)}M | Y3:${round(financials.get('revenue_y3',0),2)}M"
-        base_msg = f"CAPEX=${round(financials.get('capex',0),2)}M, NPV=${round(financials.get('npv',0),2)}M, EBITDA=${round(financials.get('ebitda',0),2)}M, IRR={round(financials.get('irr',0),2)}%"
-        dscr_str = f", DSCR={round(financials.get('dscr',0),2)}x" if financials.get('dscr') else ""
-        st.sidebar.success(f"📊 Auto-parsed: {base_msg}{dscr_str} | Revenues: {rev_summary}")
-        return financials
-    except Exception as e:
-        st.sidebar.error(f"Parse hiccup: {e}. Falling back to manual. Tip: Cols 'Metric' & 'Value'; add DSCR for credit plays.")
-        return {}
-
-def generate_ai_text(slide_type, company_name, sector, user_prompt, financials):
-    """Tease AI fill: Prompt-based text for placeholders. (Scale to LLM API.)"""
-    # MVP Mock: Structured output (replace with API call: e.g., openai.ChatCompletion)
-    if slide_type == "problem_solution":
-        return f"- Problem: Businesses in {sector} face [key challenge, e.g., high costs/ESG gaps], with [stat]% unable to scale.\n- Solution: {company_name}'s model—[user prompt summary]—delivers {round(financials.get('irr',0),2)}% IRR while [benefit].\n- Edge: [Innovation, e.g., tech integration], scalable to [milestone] by Y3."
-    elif slide_type == "product_tech":
-        return f"Core offering: [User prompt summary] platform with [key feature] for real-time {sector} optimization. Targets {sector} underserved by traditional tools."
-    elif slide_type == "revenue_projection":
-        return f"Projections: Y1 ${round(financials.get('revenue_y1',0),2)}M from initial pilots, ramping to ${round(financials.get('revenue_y3',0),2)}M by Y3 via [growth driver]. Model assumes [assumption, e.g., 80% utilization] in {sector}."
-    return "[Gen in progress—add your prompt!]"
-
-def generate_pitch_deck(company_name, financials, market_opportunity, team_highlights, ask_amount, ai_fills):
-    """Updated: Inject AI text into placeholders."""
-    viz_md = generate_financial_viz(financials)
-    
-    # AI Injections
-    problem_solution = ai_fills.get('problem
+        rev_summary = f"Y1:${round(financials.get('revenue_y1',0),2)}M | Y2:${round(financials.get('revenue_y2',0),2)}M | Y3:${round(financials.get('revenue_y3',0),
