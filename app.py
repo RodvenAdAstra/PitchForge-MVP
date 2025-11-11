@@ -30,4 +30,14 @@ def generate_financial_viz(financials):
     for bar, val in zip(bars, kpi_values):
         height = bar.get_height()
         # FIXED: Round floats to 2 decimals for clean labels
-        rounded
+        rounded_val = round(val, 2) if isinstance(val, float) else val
+        label = f'${rounded_val}M' if '$M' in kpi_metrics[kpi_values.index(val)] else f'{rounded_val}%' if '%' in kpi_metrics[kpi_values.index(val)] else f'{rounded_val}x'
+        ax1.text(bar.get_x() + bar.get_width()/2., height + 0.05,
+                 label, ha='center', va='bottom', fontsize=9)
+    
+    # Right: Revenue Line (if data exists)
+    revenues = [financials.get(f'revenue_y{i}', 0) for i in range(1, 4)]
+    if any(revenues):  # Only plot if revenue data
+        years = ['Y1', 'Y2', 'Y3']
+        ax2.plot(years, revenues, marker='o', linewidth=2.5, color='#FFD93D', markersize=8)
+        ax2.fill
