@@ -40,12 +40,4 @@ def generate_financial_viz(financials):
     if any(revenues):  # Only plot if revenue data
         years = ['Y1', 'Y2', 'Y3']
         ax2.plot(years, revenues, marker='o', linewidth=2.5, color='#FFD93D', markersize=8)
-        ax2.fill_between(years, revenues, alpha=0.3, color='#FFD93D')
-        ax2.set_title('Revenue Projections ($M)', fontsize=14, fontweight='bold')
-        ax2.set_ylabel('Revenue', fontsize=10)
-        ax2.grid(axis='y', linestyle='--', alpha=0.7)
-        
-        # Value labels on points (rounded)
-        for i, (year, rev) in enumerate(zip(years, revenues)):
-            rounded_rev = round(rev, 2)
-            ax2.annotate(f'${rounded_rev}M', (year, rev), textcoords="offset
+        ax2.fill_between(years, revenues
