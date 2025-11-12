@@ -1,54 +1,119 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>PitchForge MVP - Tester Input</title>
+    <title>PitchForge MVP - Forge Your Pitch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; max-width: 700px; margin: 50px auto; padding: 20px; }
-        input, textarea { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
-        button { background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
-        .flash { color: red; }
-        .row { display: flex; gap: 10px; }
-        .col { flex: 1; }
+        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .form-card { background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 30px; max-width: 800px; margin: 50px auto; }
+        .btn-forge { background: linear-gradient(45deg, #007bff, #0056b3); border: none; font-weight: bold; }
+        .financial-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .financial-col { flex: 1; }
+        .ai-toggle { margin: 15px 0; font-style: italic; color: #6c757d; }
+        .mrr-group { display: none; } /* Hidden by default */
     </style>
 </head>
 <body>
-    <h1>PitchForge MVP: Forge your business idea investment pitch</h1>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul class="flash">
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-    <form method="POST" enctype="multipart/form-data">
-        <label>Email: <input type="email" name="email" required></label><br>
-        <label>Idea Summary (keep it punchy!): <textarea name="idea_summary" rows="4" required></textarea></label><br>
-        <label>Target Audience: <input type="text" name="target_audience" placeholder="e.g., VCs in startups"></label><br>
-        <label>Team Bio: <textarea name="team_bio" rows="2" placeholder="e.g., Experienced founders in tech"></textarea></label><br>
-        <label>Financial Upload (Excel/CSV for auto-fill): <input type="file" name="financial_file" accept=".xlsx,.csv"></label><br>
-        <div class="row">
-            <div class="col">
-                <label>Market Size ($M): <input type="number" name="market_size" step="0.01"></label>
-            </div>
-            <div class="col">
-                <label>CAPEX ($M): <input type="number" name="capex" step="0.01"></label>
-            </div>
+    <div class="container">
+        <div class="form-card">
+            <h1 class="text-center mb-4 text-primary">PitchForge MVP: Forge your business idea investment pitch</h1>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        {{ messages[0] }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email</label>
+                    <input type="email" class="form-control" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Idea Summary (keep it punchy!)</label>
+                    <textarea class="form-control" name="idea_summary" rows="3" required placeholder="e.g., AI tool for e-comm personalization"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Target Audience</label>
+                    <input type="text" class="form-control" name="target_audience" placeholder="e.g., VCs in startups">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Team Bio</label>
+                    <textarea class="form-control" name="team_bio" rows="2" placeholder="e.g., Experienced founders in tech & finance"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Financial Upload (Excel/CSV for auto-fill metrics)</label>
+                    <input type="file" class="form-control" name="financial_file" accept=".xlsx,.csv">
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="saas_mode">
+                    <label class="form-check-label" for="saas_mode">SaaS Model? (Shows MRR field)</label>
+                </div>
+                <div class="financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">EBITDA (last 12m, $)</label>
+                        <input type="number" class="form-control" name="ebitda" step="0.01">
+                    </div>
+                    <div class="financial-col">
+                        <label class="form-label">YoY Growth Rate (%)</label>
+                        <input type="number" class="form-control" name="yoy_growth" step="0.01">
+                    </div>
+                </div>
+                <div class="financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">LTV ($)</label>
+                        <input type="number" class="form-control" name="ltv" step="0.01">
+                    </div>
+                    <div class="financial-col">
+                        <label class="form-label">CAC ($)</label>
+                        <input type="number" class="form-control" name="cac" step="0.01">
+                    </div>
+                </div>
+                <div class="financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">Burn Rate ($/month)</label>
+                        <input type="number" class="form-control" name="burn_rate" step="0.01">
+                    </div>
+                    <div class="financial-col">
+                        <label class="form-label">Gross Margin (%)</label>
+                        <input type="number" class="form-control" name="gross_margin" step="0.01">
+                    </div>
+                </div>
+                <div class="mrr-group financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">MRR ($)</label>
+                        <input type="number" class="form-control" name="mrr" step="0.01">
+                    </div>
+                    <div class="financial-col">
+                        <label class="form-label">Churn Rate (%)</label>
+                        <input type="number" class="form-control" name="churn_rate" step="0.01">
+                    </div>
+                </div>
+                <div class="financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">Funding Ask ($)</label>
+                        <input type="number" class="form-control" name="funding_ask" step="0.01">
+                    </div>
+                    <div class="financial-col">
+                        <label class="form-label">Timeline (months)</label>
+                        <input type="number" class="form-control" name="timeline_months" min="1">
+                    </div>
+                </div>
+                <div class="form-check ai-toggle">
+                    <input class="form-check-input" type="checkbox" name="ai_polish" id="ai_polish">
+                    <label class="form-check-label" for="ai_polish">AI Polish My Summary? (Enhances for investor appeal)</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-forge w-100 py-3 fs-5">Forge It! 🚀</button>
+            </form>
+            <p class="text-center mt-4 small text-muted">Investment-ready deck generated instantly—test your pitch today.</p>
         </div>
-        <div class="row">
-            <div class="col">
-                <label>NPV ($M): <input type="number" name="npv" step="0.01"></label>
-            </div>
-            <div class="col">
-                <label>IRR (%): <input type="number" name="irr" step="0.01"></label>
-            </div>
-        </div>
-        <label>Funding Ask ($): <input type="number" name="funding_ask" step="0.01"></label><br>
-        <label>Timeline (months): <input type="number" name="timeline_months" min="1"></label><br>
-        <label><input type="checkbox" name="ai_polish"> AI Polish Summary? (Enhances text for deck)</label><br>
-        <button type="submit">Forge It!</button>
-    </form>
-    <p><small>For testing only—data is local for now.</small></p>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('saas_mode').addEventListener('change', function() {
+            document.querySelector('.mrr-group').style.display = this.checked ? 'flex' : 'none';
+        });
+    </script>
 </body>
 </html>
