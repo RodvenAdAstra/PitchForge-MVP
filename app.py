@@ -73,8 +73,9 @@ def index():
             flash('Email and idea summary are required!')
             return redirect(url_for('index'))
         
-        # Upload auto-fill
+        # Upload auto-fill (case-insensitive column match)
         financial_file = None
+        parsed_columns = []
         if 'financial_file' in request.files:
             file = request.files['financial_file']
             if file.filename:
@@ -84,16 +85,29 @@ def index():
                 financial_file = filename
                 try:
                     df = pd.read_excel(file_path) if filename.endswith('.xlsx') else pd.read_csv(file_path)
-                    ebitda_str = str(df.get('EBITDA', [0])[0]) if not pd.isna(df.get('EBITDA', [0])[0]) else ebitda_str
-                    yoy_growth_str = str(df.get('YoY Growth', [0])[0]) if not pd.isna(df.get('YoY Growth', [0])[0]) else yoy_growth_str
-                    ltv_str = str(df.get('LTV', [0])[0]) if not pd.isna(df.get('LTV', [0])[0]) else ltv_str
-                    cac_str = str(df.get('CAC', [0])[0]) if not pd.isna(df.get('CAC', [0])[0]) else cac_str
-                    burn_rate_str = str(df.get('Burn Rate', [0])[0]) if not pd.isna(df.get('Burn Rate', [0])[0]) else burn_rate_str
-                    gross_margin_str = str(df.get('Gross Margin', [0])[0]) if not pd.isna(df.get('Gross Margin', [0])[0]) else gross_margin_str
-                    mrr_str = str(df.get('MRR', [0])[0]) if not pd.isna(df.get('MRR', [0])[0]) else mrr_str
-                    churn_rate_str = str(df.get('Churn Rate', [0])[0]) if not pd.isna(df.get('Churn Rate', [0])[0]) else churn_rate_str
+                    columns = [col.lower() for col in df.columns]
+                    parsed_columns = [col.title() for col in columns if col.lower() in ['ebitda', 'yoy growth', 'ltv', 'cac', 'burn rate', 'gross margin', 'mrr', 'churn rate']]
+                    if parsed_columns:
+                        flash(f'Parsed columns: {", ".join(parsed_columns)}—auto-filled where matched.')
+                    # Match & fill (case-insensitive)
+                    if 'ebitda' in columns:
+                        ebitda_str = str(df['EBITDA'].iloc[0]) if not pd.isna(df['EBITDA'].iloc[0]) else ebitda_str
+                    if 'yoy growth' in columns:
+                        yoy_growth_str = str(df['YoY Growth'].iloc[0]) if not pd.isna(df['YoY Growth'].iloc[0]) else yoy_growth_str
+                    if 'ltv' in columns:
+                        ltv_str = str(df['LTV'].iloc[0]) if not pd.isna(df['LTV'].iloc[0]) else ltv_str
+                    if 'cac' in columns:
+                        cac_str = str(df['CAC'].iloc[0]) if not pd.isna(df['CAC'].iloc[0]) else cac_str
+                    if 'burn rate' in columns:
+                        burn_rate_str = str(df['Burn Rate'].iloc[0]) if not pd.isna(df['Burn Rate'].iloc[0]) else burn_rate_str
+                    if 'gross margin' in columns:
+                        gross_margin_str = str(df['Gross Margin'].iloc[0]) if not pd.isna(df['Gross Margin'].iloc[0]) else gross_margin_str
+                    if 'mrr' in columns:
+                        mrr_str = str(df['MRR'].iloc[0]) if not pd.isna(df['MRR'].iloc[0]) else mrr_str
+                    if 'churn rate' in columns:
+                        churn_rate_str = str(df['Churn Rate'].iloc[0]) if not pd.isna(df['Churn Rate'].iloc[0]) else churn_rate_str
                 except Exception as e:
-                    flash(f'Upload parsed partially: {str(e)}')
+                    flash(f'Upload error: {str(e)}—manual entry still works.')
         
         # Safe numbers
         try:
@@ -181,7 +195,7 @@ def build_pitch_deck_buffer(pitch_id, summary, audience, team_bio, ebitda, yoy_g
     content.text = team_bio or "Proven team with execution expertise."
     content.text_frame.paragraphs[0].font.size = Pt(20)
     
-    # Slide 5: Investment Metrics Chart (bars for EBITDA/Gross/Burn, line for YoY/Churn)
+    # Slide 5: Investment Metrics Chart (dynamic: skip if all zero, add labels)
     slide = prs.slides.add_slide(slide_layout)
     title = slide.shapes.title
     title.text = "Investment Metrics Dashboard"
@@ -191,34 +205,58 @@ def build_pitch_deck_buffer(pitch_id, summary, audience, team_bio, ebitda, yoy_g
     bg.fill.solid()
     bg.fill.fore_color.rgb = RGBColor(248, 249, 250)
     bg.line.fill.background()
-    # Chart 1: Bars (EBITDA, Gross Margin, Burn Rate)
-    chart1_buffer = io.BytesIO()
-    plt.figure(figsize=(6, 4))
-    bars_metrics = ['EBITDA ($$ )', 'Gross Margin (%)', 'Burn Rate ( $$/mo)']
-    bars_values = [ebitda, gross_margin, burn_rate]
-    plt.bar(bars_metrics, bars_values, color=['green', 'blue', 'red'], alpha=0.7)
-    plt.title('Profitability & Burn')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.savefig(chart1_buffer, format='png', bbox_inches='tight')
-    chart1_buffer.seek(0)
-    plt.close()
-    slide.shapes.add_picture(chart1_buffer, Inches(0.5), Inches(2), width=Inches(4))
-    # Chart 2: Line (YoY Growth, Churn)
-    chart2_buffer = io.BytesIO()
-    plt.figure(figsize=(6, 4))
-    line_x = ['YoY Growth (%)', 'Churn Rate (%)']
-    line_y = [yoy_growth, churn_rate]
-    plt.plot(line_x, line_y, marker='o', color='purple', linewidth=2)
-    plt.title('Growth & Retention Trends')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.savefig(chart2_buffer, format='png', bbox_inches='tight')
-    chart2_buffer.seek(0)
-    plt.close()
-    slide.shapes.add_picture(chart2_buffer, Inches(5), Inches(2), width=Inches(4))
-    # LTV/CAC pie (if CAC > 0)
-    if cac > 0:
+    # Values for charts (scale $ to thousands for visual)
+    ebitda_k = ebitda / 1000 if ebitda else 0
+    burn_k = burn_rate / 1000 if burn_rate else 0
+    ltv_k = ltv / 1000 if ltv else 0
+    cac_k = cac / 1000 if cac else 0
+    mrr_k = mrr / 1000 if mrr else 0
+    # Bar chart: EBITDA, Gross Margin, Burn Rate (only if any > 0)
+    if ebitda > 0 or gross_margin > 0 or burn_rate > 0:
+        chart1_buffer = io.BytesIO()
+        plt.figure(figsize=(6, 4))
+        bars_metrics = ['EBITDA ($k)', 'Gross Margin (%)', 'Burn Rate ($k/mo)']
+        bars_values = [ebitda_k, gross_margin, burn_k]
+        colors = ['green', 'blue', 'red']
+        bars = plt.bar(bars_metrics, bars_values, color=colors, alpha=0.7)
+        plt.title('Profitability & Burn')
+        plt.xticks(rotation=45)
+        # Label values on bars
+        for bar, val in zip(bars, bars_values):
+            plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, f'${val:,.0f}' if 'k' in bars_metrics[bar.get_x()] else f'{val:.1f}%', ha='center', va='bottom')
+        plt.tight_layout()
+        plt.savefig(chart1_buffer, format='png', bbox_inches='tight')
+        chart1_buffer.seek(0)
+        plt.close()
+        slide.shapes.add_picture(chart1_buffer, Inches(0.5), Inches(2), width=Inches(4))
+    else:
+        # Placeholder text
+        placeholder = slide.shapes.add_textbox(Inches(1), Inches(2), Inches(8), Inches(3))
+        tf = placeholder.text_frame
+        p = tf.paragraphs[0]
+        p.text = "Enter metrics (e.g., EBITDA $100k, Gross Margin 75%) for dynamic charts."
+        p.font.size = Pt(18)
+        p.alignment = PP_ALIGN.CENTER
+    
+    # Line chart: YoY Growth, Churn (only if any > 0)
+    if yoy_growth > 0 or churn_rate > 0:
+        chart2_buffer = io.BytesIO()
+        plt.figure(figsize=(6, 4))
+        line_x = ['YoY Growth (%)', 'Churn Rate (%)']
+        line_y = [yoy_growth, churn_rate]
+        plt.plot(line_x, line_y, marker='o', color='purple', linewidth=2)
+        plt.title('Growth & Retention Trends')
+        plt.xticks(rotation=45)
+        # Label points
+        for i, (x, y) in enumerate(zip(line_x, line_y)):
+            plt.text(i, y + 0.5, f'{y:.1f}%', ha='center', va='bottom')
+        plt.tight_layout()
+        plt.savefig(chart2_buffer, format='png', bbox_inches='tight')
+        chart2_buffer.seek(0)
+        plt.close()
+        slide.shapes.add_picture(chart2_buffer, Inches(5), Inches(2), width=Inches(4))
+    # Pie: LTV vs CAC (only if both > 0)
+    if ltv > 0 and cac > 0:
         pie_buffer = io.BytesIO()
         plt.figure(figsize=(4, 4))
         sizes = [ltv, cac]
@@ -230,7 +268,15 @@ def build_pitch_deck_buffer(pitch_id, summary, audience, team_bio, ebitda, yoy_g
         plt.savefig(pie_buffer, format='png', bbox_inches='tight')
         pie_buffer.seek(0)
         plt.close()
-        slide.shapes.add_picture(pie_buffer, Inches(0.5), Inches(4.5), width=Inches(3))
+        slide.shapes.add_picture(pie_buffer, Inches(5), Inches(4.5), width=Inches(3))
+    # SaaS note
+    if mrr > 0:
+        saas_note = slide.shapes.add_textbox(Inches(1), Inches(5.5), Inches(8), Inches(0.5))
+        sf = saas_note.text_frame
+        sp = sf.paragraphs[0]
+        sp.text = f"MRR: ${mrr_k:,.0f}k | Strong recurring revenue stream."
+        sp.font.size = Pt(16)
+        sp.font.color.rgb = RGBColor(0, 128, 0)
     
     # Slide 6: Ask
     slide = prs.slides.add_slide(slide_layout)
@@ -239,7 +285,7 @@ def build_pitch_deck_buffer(pitch_id, summary, audience, team_bio, ebitda, yoy_g
     title.text_frame.paragraphs[0].font.size = Pt(32)
     title.text_frame.paragraphs[0].font.color.rgb = RGBColor(0, 123, 255)
     content = slide.placeholders[1]
-    content.text = f"${ask:,.0f} | Timeline: {timeline} months\nMRR (SaaS): ${mrr:,.0f}\nFuel for acceleration."
+    content.text = f"${ask:,.0f} | Timeline: {timeline} months\n\nFuel for acceleration and milestones."
     content.text_frame.paragraphs[0].font.size = Pt(20)
     
     # Slides 7-12: Placeholders (themed with icons)
