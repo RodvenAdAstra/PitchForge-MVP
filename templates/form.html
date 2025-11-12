@@ -1,84 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <title>PitchForge MVP - Forge Your Pitch</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>PitchForge MVP - Tester Input</title>
     <style>
-        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-        .form-card { background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); padding: 30px; max-width: 700px; margin: 50px auto; }
-        .btn-forge { background: linear-gradient(45deg, #007bff, #0056b3); border: none; }
-        .ai-toggle { margin: 10px 0; }
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        .flash { color: red; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="form-card">
-            <h1 class="text-center mb-4 text-primary">PitchForge MVP: Forge Your Power Fintech Pitch</h1>
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    <div class="alert alert-warning">
-                        {{ messages[0] }}
-                    </div>
-                {% endif %}
-            {% endwith %}
-            <form method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" name="email" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Idea Summary (keep punchy!)</label>
-                    <textarea class="form-control" name="idea_summary" rows="3" required></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Target Audience</label>
-                    <input type="text" class="form-control" name="target_audience" placeholder="e.g., VCs in solar fintech">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Team Bio</label>
-                    <textarea class="form-control" name="team_bio" rows="2" placeholder="e.g., Fintech lawyers & blockchain founders"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Financial Upload (Excel/CSV for auto-fill CAPEX/NPV/IRR)</label>
-                    <input type="file" class="form-control" name="financial_file" accept=".xlsx,.csv">
-                </div>
-                <div class="row">
-                    <div class="col-md-3">
-                        <label class="form-label">Market Size ($M)</label>
-                        <input type="number" class="form-control" name="market_size" step="0.01">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">CAPEX ($M)</label>
-                        <input type="number" class="form-control" name="capex" step="0.01">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">NPV ($M)</label>
-                        <input type="number" class="form-control" name="npv" step="0.01">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">IRR (%)</label>
-                        <input type="number" class="form-control" name="irr" step="0.01">
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Funding Ask ($)</label>
-                        <input type="number" class="form-control" name="funding_ask" step="0.01">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Timeline (months)</label>
-                        <input type="number" class="form-control" name="timeline_months" min="1">
-                    </div>
-                </div>
-                <div class="form-check ai-toggle">
-                    <input class="form-check-input" type="checkbox" name="ai_polish" id="ai_polish">
-                    <label class="form-check-label" for="ai_polish">AI Polish My Summary? (Enhances text for deck)</label>
-                </div>
-                <button type="submit" class="btn btn-primary btn-forge w-100 mt-4 py-2">Forge It! 🚀</button>
-            </form>
-            <p class="text-center mt-4 small text-muted">Powered by Power Fintech—Upload financials for auto-magic.</p>
-        </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <h1>PitchForge MVP: Forge your business idea investment pitch</h1>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flash">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <form method="POST">
+        <label>Email: <input type="email" name="email" required></label><br>
+        <label>Idea Summary (keep it punchy!): <textarea name="idea_summary" rows="4" required></textarea></label><br>
+        <label>Target Audience: <input type="text" name="target_audience" placeholder="e.g., VCs in startups"></label><br>
+        <label>Funding Ask ($): <input type="number" name="funding_ask" step="0.01"></label><br>
+        <label>Timeline (months): <input type="number" name="timeline_months" min="1"></label><br>
+        <button type="submit">Forge It!</button>
+    </form>
+    <p><small>For testing only—data is local for now.</small></p>
 </body>
 </html>
