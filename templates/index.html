@@ -1,1 +1,20 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PitchForge MVP</title>
+    <link rel="icon" href="data:,"> <!-- Quick favicon fix to avoid 404s -->
+</head>
+<body>
+    <h1>Welcome to PitchForge</h1>
+    <p>Upload your pitch deck to get started.</p>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".pdf,.pptx" required>
+        <button type="submit">Upload</button>
+    </form>
+    {% if filename %}
+        <p>File uploaded: {{ filename }}</p>
+    {% endif %}
+</body>
+</html>
