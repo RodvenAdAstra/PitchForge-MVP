@@ -1,3 +1,4 @@
 Flask==3.0.3
 gunicorn==21.2.0
-
+python-pptx==1.0.2
+reportlab==4.2.2  # For PDF fallback if needed
