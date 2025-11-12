@@ -1,23 +1,33 @@
-from flask import Flask, request, render_template
-from werkzeug.utils import secure_filename  # Don't forget this!
-import os  # If saving files
-
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'  # Optional: dir for saving files
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)  # Create if needed
-
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    filename = None
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            return render_template('index.html', error='No file part'), 400
-        file = request.files['file']
-        if file.filename == '':
-            return render_template('index.html', error='No selected file'), 400
-        if file:
-            filename = secure_filename(file.filename)
-            # Optional: Save/process the file (e.g., for PDF pitch analysis)
-            # file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            # Here: Add your PitchForge logic, like extracting text from PDF
-    return render_template('index.html', filename=filename)
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PitchForge MVP - Tester Input</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        .flash { color: red; }
+    </style>
+</head>
+<body>
+    <h1>PitchForge MVP: Forge Your Idea</h1>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flash">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <form method="POST">
+        <label>Email: <input type="email" name="email" required></label><br>
+        <label>Idea Summary (keep it punchy!): <textarea name="idea_summary" rows="4" required></textarea></label><br>
+        <label>Target Audience: <input type="text" name="target_audience" placeholder="e.g., VCs in fintech"></label><br>
+        <label>Funding Ask ($): <input type="number" name="funding_ask" step="0.01"></label><br>
+        <label>Timeline (months): <input type="number" name="timeline_months" min="1"></label><br>
+        <button type="submit">Forge It!</button>
+    </form>
+    <p><small>For testing only—data is local for now.</small></p>
+</body>
+</html>
