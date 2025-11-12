@@ -3,10 +3,12 @@
 <head>
     <title>PitchForge MVP - Tester Input</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        body { font-family: Arial, sans-serif; max-width: 700px; margin: 50px auto; padding: 20px; }
         input, textarea { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
         button { background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
         .flash { color: red; }
+        .row { display: flex; gap: 10px; }
+        .col { flex: 1; }
     </style>
 </head>
 <body>
@@ -20,12 +22,31 @@
             </ul>
         {% endif %}
     {% endwith %}
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         <label>Email: <input type="email" name="email" required></label><br>
         <label>Idea Summary (keep it punchy!): <textarea name="idea_summary" rows="4" required></textarea></label><br>
         <label>Target Audience: <input type="text" name="target_audience" placeholder="e.g., VCs in startups"></label><br>
+        <label>Team Bio: <textarea name="team_bio" rows="2" placeholder="e.g., Experienced founders in tech"></textarea></label><br>
+        <label>Financial Upload (Excel/CSV for auto-fill): <input type="file" name="financial_file" accept=".xlsx,.csv"></label><br>
+        <div class="row">
+            <div class="col">
+                <label>Market Size ($M): <input type="number" name="market_size" step="0.01"></label>
+            </div>
+            <div class="col">
+                <label>CAPEX ($M): <input type="number" name="capex" step="0.01"></label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>NPV ($M): <input type="number" name="npv" step="0.01"></label>
+            </div>
+            <div class="col">
+                <label>IRR (%): <input type="number" name="irr" step="0.01"></label>
+            </div>
+        </div>
         <label>Funding Ask ($): <input type="number" name="funding_ask" step="0.01"></label><br>
         <label>Timeline (months): <input type="number" name="timeline_months" min="1"></label><br>
+        <label><input type="checkbox" name="ai_polish"> AI Polish Summary? (Enhances text for deck)</label><br>
         <button type="submit">Forge It!</button>
     </form>
     <p><small>For testing only—data is local for now.</small></p>
