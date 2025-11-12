@@ -33,19 +33,20 @@ def index():
         email = request.form['email']
         idea_summary = request.form['idea_summary']
         target_audience = request.form.get('target_audience', '')
-        funding_ask_str = request.form.get('funding_ask', '0')
-        timeline_months_str = request.form.get('timeline_months', '0')
+        funding_ask_str = request.form.get('funding_ask', '')
+        timeline_months_str = request.form.get('timeline_months', '')
         
-        # Basic validation + safe coerce
+        # Basic validation
         if not email or not idea_summary:
             flash('Email and idea summary are required!')
             return redirect(url_for('index'))
         
+        # Safe number coercion
         try:
             funding_ask = float(funding_ask_str) if funding_ask_str else 0.0
             timeline_months = int(timeline_months_str) if timeline_months_str else 0
         except ValueError:
-            flash('Funding and timeline must be numbers!')
+            flash('Funding ask and timeline must be valid numbers (or leave blank for defaults)!')
             return redirect(url_for('index'))
         
         conn = sqlite3.connect('pitchforge.db')
