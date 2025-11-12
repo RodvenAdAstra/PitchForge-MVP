@@ -1,43 +1,65 @@
-import streamlit as st
-import matplotlib
-matplotlib.use('Agg')  # Safety for headless/Playground - prevents display errors
-import matplotlib.pyplot as plt
-import io
-import base64
-import pandas as pd  # Powers the beefed CSV magic
+from flask import Flask, render_template, request, redirect, url_for, flash
+import sqlite3
+from datetime import datetime
 
-def generate_financial_viz(financials):
-    """Beefed: Bar for KPIs (+ optional DSCR) + line for revenue; return base64 embed."""
-    # Dynamic KPI list (optional DSCR)
-    kpi_metrics = ['CAPEX ($M)', 'NPV ($M)', 'EBITDA ($M)', 'IRR (%)']
-    kpi_values = [financials.get('capex', 0), financials.get('npv', 0), financials.get('ebitda', 0), financials.get('irr', 0)]
-    kpi_colors = ['#FF6B6B', '#4ECDC4', '#FFD93D', '#45B7D1']
+app = Flask(__name__)
+app.secret_key = 'pitchforge_mvp_key'  # Change this in prod!
+
+# Init DB
+def init_db():
+    conn = sqlite3.connect('pitchforge.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS pitches
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  email TEXT NOT NULL,
+                  idea_summary TEXT NOT NULL,
+                  target_audience TEXT,
+                  funding_ask REAL,
+                  timeline_months INTEGER,
+                  submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        email = request.form['email']
+        idea_summary = request.form['idea_summary']
+        target_audience = request.form.get('target_audience', '')
+        funding_ask = request.form.get('funding_ask', 0)
+        timeline_months = request.form.get('timeline_months', 0)
+        
+        # Basic validation
+        if not email or not idea_summary:
+            flash('Email and idea summary are required!')
+            return redirect(url_for('index'))
+        
+        conn = sqlite3.connect('pitchforge.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO pitches (email, idea_summary, target_audience, funding_ask, timeline_months)
+                     VALUES (?, ?, ?, ?, ?)''',
+                  (email, idea_summary, target_audience, float(funding_ask), int(timeline_months)))
+        conn.commit()
+        conn.close()
+        
+        flash('Pitch submitted! Thanks for testing—check your email for a fake confirmation.')
+        return redirect(url_for('success'))
     
-    # Add DSCR if present (for credit requests)
-    if financials.get('dscr') is not None and financials['dscr'] > 0:
-        kpi_metrics.append('DSCR (x)')
-        kpi_values.append(financials['dscr'])
-        kpi_colors.append('#28A745')  # Green for coverage win
-    
-    # Bar chart
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-    
-    bars = ax1.bar(kpi_metrics, kpi_values, color=kpi_colors)
-    ax1.set_title('Key Financials', fontsize=14, fontweight='bold')
-    ax1.set_ylabel('Value', fontsize=10)
-    ax1.tick_params(axis='x', rotation=45)
-    
-    for bar, val in zip(bars, kpi_values):
-        height = bar.get_height()
-        # FIXED: Round floats to 2 decimals for clean labels
-        rounded_val = round(val, 2) if isinstance(val, float) else val
-        label = f'${rounded_val}M' if '$M' in kpi_metrics[kpi_values.index(val)] else f'{rounded_val}%' if '%' in kpi_metrics[kpi_values.index(val)] else f'{rounded_val}x'
-        ax1.text(bar.get_x() + bar.get_width()/2., height + 0.05,
-                 label, ha='center', va='bottom', fontsize=9)
-    
-    # Right: Revenue Line (if data exists)
-    revenues = [financials.get(f'revenue_y{i}', 0) for i in range(1, 4)]
-    if any(revenues):  # Only plot if revenue data
-        years = ['Y1', 'Y2', 'Y3']
-        ax2.plot(years, revenues, marker='o', linewidth=2.5, color='#FFD93D', markersize=8)
-        ax2.fill
+    return render_template('form.html')
+
+@app.route('/success')
+def success():
+    return '''
+    <html>
+        <head><title>PitchForge MVP</title></head>
+        <body>
+            <h1>Success! Your pitch is forged.</h1>
+            <p>We'll review it soon. <a href="/">Submit another?</a></p>
+        </body>
+    </html>
+    '''
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
