@@ -6,12 +6,11 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 import io
-import zipfile
 
 app = Flask(__name__)
 app.secret_key = 'pitchforge_mvp_key'
 
-# Init DB (same as before)
+# Init DB
 def init_db():
     conn = sqlite3.connect('pitchforge.db')
     c = conn.cursor()
@@ -34,81 +33,93 @@ def index():
         email = request.form['email']
         idea_summary = request.form['idea_summary']
         target_audience = request.form.get('target_audience', '')
-        funding_ask = request.form.get('funding_ask', 0)
-        timeline_months = request.form.get('timeline_months', 0)
+        funding_ask_str = request.form.get('funding_ask', '0')
+        timeline_months_str = request.form.get('timeline_months', '0')
         
-        # Basic validation
+        # Basic validation + safe coerce
         if not email or not idea_summary:
             flash('Email and idea summary are required!')
+            return redirect(url_for('index'))
+        
+        try:
+            funding_ask = float(funding_ask_str) if funding_ask_str else 0.0
+            timeline_months = int(timeline_months_str) if timeline_months_str else 0
+        except ValueError:
+            flash('Funding and timeline must be numbers!')
             return redirect(url_for('index'))
         
         conn = sqlite3.connect('pitchforge.db')
         c = conn.cursor()
         c.execute('''INSERT INTO pitches (email, idea_summary, target_audience, funding_ask, timeline_months)
                      VALUES (?, ?, ?, ?, ?)''',
-                  (email, idea_summary, target_audience, float(funding_ask), int(timeline_months)))
+                  (email, idea_summary, target_audience, funding_ask, timeline_months))
         pitch_id = c.lastrowid
         conn.commit()
         conn.close()
         
-        # Build & serve deck
-        deck_path = build_pitch_deck(pitch_id, idea_summary, target_audience, funding_ask, timeline_months)
-        return send_file(deck_path, as_attachment=True, download_name=f'PitchForge_Deck_{pitch_id}.pptx',
+        # Build deck buffer
+        buffer = build_pitch_deck_buffer(pitch_id, idea_summary, target_audience, funding_ask, timeline_months)
+        
+        # Stream download
+        return send_file(buffer, as_attachment=True, download_name=f'PitchForge_Deck_{pitch_id}.pptx',
                          mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation')
     
     return render_template('form.html')
 
-def build_pitch_deck(pitch_id, summary, audience, ask, timeline):
+def build_pitch_deck_buffer(pitch_id, summary, audience, ask, timeline):
     prs = Presentation()
     
     # Slide 1: Title
-    slide = prs.slides.add_slide(prs.slide_layouts[0])
+    slide_layout = prs.slide_layouts[0]  # Title slide
+    slide = prs.slides.add_slide(slide_layout)
     title = slide.shapes.title
     title.text = "PitchForge MVP Deck"
     subtitle = slide.placeholders[1]
     subtitle.text = f"ID: {pitch_id} | Generated: {datetime.now().strftime('%Y-%m-%d')}"
     
-    # Slide 2: Problem/Solution (from summary)
-    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    # Slide 2: Idea
+    slide_layout = prs.slide_layouts[1]  # Title + Content
+    slide = prs.slides.add_slide(slide_layout)
     title = slide.shapes.title
     title.text = "The Big Idea"
     content = slide.placeholders[1]
-    content.text = summary
-    content.text_frame.paragraphs[0].font.size = Pt(18)
+    tf = content.text_frame
+    tf.text = summary
+    for p in tf.paragraphs:
+        p.font.size = Pt(18)
     
-    # Slide 3: Market (audience)
-    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    # Slide 3: Market
+    slide = prs.slides.add_slide(slide_layout)
     title = slide.shapes.title
     title.text = "Target Market"
     content = slide.placeholders[1]
     content.text = f"Audience: {audience}\n\nOpportunity: Scalable to VCs & founders in [your niche]."
     
-    # Slide 4: The Ask
-    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    # Slide 4: Ask
+    slide = prs.slides.add_slide(slide_layout)
     title = slide.shapes.title
     title.text = "Funding Ask"
     content = slide.placeholders[1]
-    content.text = f"${ask:,} | Timeline: {timeline} months\n\nMilestones: MVP launch, user acquisition."
+    content.text = f"${ask:,.2f} | Timeline: {timeline} months\n\nMilestones: MVP launch, user acquisition."
     
-    # Add more slides as needed (e.g., Traction, Team—hardcode placeholders for now)
-    for i in range(5, 11):  # Slides 5-10: Boilerplate
-        slide = prs.slides.add_slide(prs.slide_layouts[6])  # Blank
-        title = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(8), Inches(1))
-        tf = title.text_frame
+    # Slides 5-10: Placeholders (use blank layout safely)
+    placeholder_topics = ['Traction', 'Team', 'Financials', 'Roadmap', 'Contact', 'Q&A']
+    blank_layout = prs.slide_layouts[6]  # Blank
+    for i, topic in enumerate(placeholder_topics, 5):
+        slide = prs.slides.add_slide(blank_layout)
+        txBox = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(8), Inches(1))
+        tf = txBox.text_frame
         p = tf.paragraphs[0]
-        p.text = f"Slide {i}: [Add your {['Traction', 'Team', 'Financials', 'Roadmap', 'Contact', 'Q&A'][i-5]} here]"
+        p.text = f"Slide {i}: [Add your {topic} here]"
         p.alignment = PP_ALIGN.CENTER
-        p.font.color.rgb = RGBColor(0, 0, 255)
+        p.font.color.rgb = RGBColor(0, 0, 255)  # Blue
+        p.font.size = Pt(24)
     
-    # Save to in-memory buffer
+    # Save to buffer
     buffer = io.BytesIO()
     prs.save(buffer)
     buffer.seek(0)
-    
-    # Temp file path for send_file
-    with open(f'/tmp/deck_{pitch_id}.pptx', 'wb') as f:
-        f.write(buffer.getvalue())
-    return f'/tmp/deck_{pitch_id}.pptx'
+    return buffer
 
 @app.route('/success')
 def success():
