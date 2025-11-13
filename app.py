@@ -112,41 +112,4 @@ def index():
                     gross_match = df_columns_lower[df_columns_lower.str.contains('gross margin', case=False, na=False)].index
                     if len(gross_match) > 0:
                         col_name = df.columns[gross_match[0]]
-                        gross_margin_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    mrr_match = df_columns_lower[df_columns_lower.str.contains('mrr', case=False, na=False)].index
-                    if len(mrr_match) > 0:
-                        col_name = df.columns[mrr_match[0]]
-                        mrr_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    churn_match = df_columns_lower[df_columns_lower.str.contains('churn rate', case=False, na=False)].index
-                    if len(churn_match) > 0:
-                        col_name = df.columns[churn_match[0]]
-                        churn_rate_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    if parsed_columns:
-                        flash(f'Parsed columns: {", ".join(parsed_columns)}—auto-filled matching metrics.')
-                    else:
-                        flash('No matching columns found—check headers (e.g., "EBITDA", "YoY Growth Rate"). Manual entry used.')
-                except Exception as e:
-                    flash(f'Upload error: {str(e)}—manual entry still works.')
-        
-        # Safe numbers (handle NaN/empty as 0)
-        ebitda = pd.to_numeric(ebitda_str, errors='coerce') or 0.0
-        yoy_growth = pd.to_numeric(yoy_growth_str, errors='coerce') or 0.0
-        ltv = pd.to_numeric(ltv_str, errors='coerce') or 0.0
-        cac = pd.to_numeric(cac_str, errors='coerce') or 0.0
-        burn_rate = pd.to_numeric(burn_rate_str, errors='coerce') or 0.0
-        gross_margin = pd.to_numeric(gross_margin_str, errors='coerce') or 0.0
-        mrr = pd.to_numeric(mrr_str, errors='coerce') or 0.0
-        churn_rate = pd.to_numeric(churn_rate_str, errors='coerce') or 0.0
-        funding_ask = pd.to_numeric(funding_ask_str, errors='coerce') or 0.0
-        timeline_months = int(pd.to_numeric(timeline_months_str, errors='coerce') or 0)
-        
-        # AI polish (now after numbers)
-        if ai_polish == 'on':
-            idea_summary = polish_text(idea_summary, ltv, cac, yoy_growth, churn_rate)
-        
-        conn = sqlite3.connect('pitchforge.db')
-        c = conn.cursor()
-        c.execute('''INSERT INTO pitches (email, idea_summary, target_audience, team_bio, ebitda, yoy_growth, ltv, cac, burn_rate
+                        gross_margin_str
