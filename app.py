@@ -70,7 +70,7 @@ def index():
             flash('Email and idea summary are required!')
             return redirect(url_for('index'))
         
-        # Upload auto-fill
+        # Upload auto-fill (robust: str.contains for variations, get column name)
         financial_file = None
         parsed_columns = []
         if 'financial_file' in request.files:
@@ -83,6 +83,7 @@ def index():
                 try:
                     df = pd.read_excel(file_path) if filename.endswith('.xlsx') else pd.read_csv(file_path)
                     df_columns_lower = df.columns.str.lower()
+                    # Find matching column names (first match)
                     ebitda_match = df_columns_lower[df_columns_lower.str.contains('ebitda', case=False, na=False)].index
                     if len(ebitda_match) > 0:
                         col_name = df.columns[ebitda_match[0]]
@@ -100,7 +101,4 @@ def index():
                         parsed_columns.append(col_name)
                     cac_match = df_columns_lower[df_columns_lower.str.contains('cac', case=False, na=False)].index
                     if len(cac_match) > 0:
-                        col_name = df.columns[cac_match[0]]
-                        cac_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    burn_match = df_columns_lower[df_columns_lower.str.contains('burn rate', case=False
+                        col_name = df.columns[cac_match
