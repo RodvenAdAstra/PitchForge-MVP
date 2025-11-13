@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file
+from flask import Flask, render_template_string, request, redirect, url_for, flash, send_file
 import sqlite3
 from datetime import datetime
 from pptx import Presentation
@@ -46,6 +46,129 @@ def init_db():
 
 init_db()
 
+# Form HTML template (embedded for simplicity)
+FORM_HTML = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>PitchForge MVP - Forge Your Pitch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .form-card { background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 30px; max-width: 800px; margin: 50px auto; }
+        .btn-forge { background: linear-gradient(45deg, #007bff, #0056b3); border: none; font-weight: bold; }
+        .financial-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .financial-col { flex: 1; }
+        .ai-toggle { margin: 15px 0; font-style: italic; color: #6c757d; }
+        .mrr-group { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-card">
+            <h1 class="text-center mb-4 text-primary">PitchForge MVP: Forge your business idea investment pitch</h1>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        {{ messages[0] }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email</label>
+                    <input type="email" class="form-control" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Idea Summary (keep it punchy!)</label>
+                    <textarea class="form-control" name="idea_summary" rows="3" required placeholder="e.g., AI tool for e-comm personalization"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Target Audience</label>
+                    <input type="text" class="form-control" name="target_audience" placeholder="e.g., VCs in startups">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Team Bio</label>
+                    <textarea class="form-control" name="team_bio" rows="2" placeholder="e.g., Experienced founders in tech & finance"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Financial Upload (Excel/CSV for auto-fill metrics)</label>
+                    <input type="file" class="form-control" name="financial_file" accept=".xlsx,.csv">
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="saas_mode">
+                    <label class="form-check-label" for="saas_mode">SaaS Model? (Shows MRR field)</label>
+                </div>
+                <div class="financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">EBITDA (last 12m, $)</label>
+                        <input type="number" class="form-control" name="ebitda" step="0.01">
+                    </div>
+                    <div class="financial-col">
+                        <label class="form-label">YoY Growth Rate (%)</label>
+                        <input type="number" class="form-control" name="yoy_growth" step="0.01">
+                    </div>
+                </div>
+                <div class="financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">LTV ($)</label>
+                        <input type="number" class="form-control" name="ltv" step="0.01">
+                    </div>
+                    <div class="financial-col">
+                        <label class="form-label">CAC ($)</label>
+                        <input type="number" class="form-control" name="cac" step="0.01">
+                    </div>
+                </div>
+                <div class="financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">Burn Rate ($/month)</label>
+                        <input type="number" class="form-control" name="burn_rate" step="0.01">
+                    </div>
+                    <div class="financial-col">
+                        <label class="form-label">Gross Margin (%)</label>
+                        <input type="number" class="form-control" name="gross_margin" step="0.01">
+                    </div>
+                </div>
+                <div class="mrr-group financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">MRR ($)</label>
+                        <input type="number" class="form-control" name="mrr" step="0.01">
+                    </div>
+                    <div class="financial-col">
+                        <label class="form-label">Churn Rate (%)</label>
+                        <input type="number" class="form-control" name="churn_rate" step="0.01">
+                    </div>
+                </div>
+                <div class="financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">Funding Ask ($)</label>
+                        <input type="number" class="form-control" name="funding_ask" step="0.01">
+                    </div>
+                    <div class="financial-col">
+                        <label class="form-label">Timeline (months)</label>
+                        <input type="number" class="form-control" name="timeline_months" min="1">
+                    </div>
+                </div>
+                <div class="form-check ai-toggle">
+                    <input class="form-check-input" type="checkbox" name="ai_polish" id="ai_polish">
+                    <label class="form-check-label" for="ai_polish">AI Polish My Summary? (Enhances for investor appeal)</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-forge w-100 py-3 fs-5">Forge It! 🚀</button>
+            </form>
+            <p class="text-center mt-4 small text-muted">Investment-ready deck generated instantly—test your pitch today.</p>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('saas_mode').addEventListener('change', function() {
+            document.querySelector('.mrr-group').style.display = this.checked ? 'flex' : 'none';
+        });
+    </script>
+</body>
+</html>
+'''
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -68,7 +191,7 @@ def index():
         # Validation
         if not email or not idea_summary:
             flash('Email and idea summary are required!')
-            return redirect(url_for('index'))
+            return render_template_string(FORM_HTML)
         
         # Upload auto-fill
         financial_file = None
@@ -101,109 +224,4 @@ def index():
                     cac_match = df_columns_lower[df_columns_lower.str.contains('cac', case=False, na=False)].index
                     if len(cac_match) > 0:
                         col_name = df.columns[cac_match[0]]
-                        cac_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    burn_match = df_columns_lower[df_columns_lower.str.contains('burn rate', case=False, na=False)].index
-                    if len(burn_match) > 0:
-                        col_name = df.columns[burn_match[0]]
-                        burn_rate_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    gross_match = df_columns_lower[df_columns_lower.str.contains('gross margin', case=False, na=False)].index
-                    if len(gross_match) > 0:
-                        col_name = df.columns[gross_match[0]]
-                        gross_margin_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    mrr_match = df_columns_lower[df_columns_lower.str.contains('mrr', case=False, na=False)].index
-                    if len(mrr_match) > 0:
-                        col_name = df.columns[mrr_match[0]]
-                        mrr_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    churn_match = df_columns_lower[df_columns_lower.str.contains('churn rate', case=False, na=False)].index
-                    if len(churn_match) > 0:
-                        col_name = df.columns[churn_match[0]]
-                        churn_rate_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    if parsed_columns:
-                        flash(f'Parsed columns: {", ".join(parsed_columns)}—auto-filled matching metrics.')
-                    else:
-                        flash('No matching columns found—check headers (e.g., "EBITDA", "YoY Growth Rate"). Manual entry used.')
-                except Exception as e:
-                    flash(f'Upload error: {str(e)}—manual entry still works.')
-        
-        # Safe numbers (handle NaN/empty as 0)
-        ebitda = pd.to_numeric(ebitda_str, errors='coerce') or 0.0
-        yoy_growth = pd.to_numeric(yoy_growth_str, errors='coerce') or 0.0
-        ltv = pd.to_numeric(ltv_str, errors='coerce') or 0.0
-        cac = pd.to_numeric(cac_str, errors='coerce') or 0.0
-        burn_rate = pd.to_numeric(burn_rate_str, errors='coerce') or 0.0
-        gross_margin = pd.to_numeric(gross_margin_str, errors='coerce') or 0.0
-        mrr = pd.to_numeric(mrr_str, errors='coerce') or 0.0
-        churn_rate = pd.to_numeric(churn_rate_str, errors='coerce') or 0.0
-        funding_ask = pd.to_numeric(funding_ask_str, errors='coerce') or 0.0
-        timeline_months = int(pd.to_numeric(timeline_months_str, errors='coerce') or 0)
-        
-        # AI polish (after numbers)
-        if ai_polish == 'on':
-            idea_summary = polish_text(idea_summary, ltv, cac, yoy_growth, churn_rate)
-        
-        conn = sqlite3.connect('pitchforge.db')
-        c = conn.cursor()
-        c.execute('''INSERT INTO pitches (email, idea_summary, target_audience, team_bio, ebitda, yoy_growth, ltv, cac, burn_rate, gross_margin, mrr, churn_rate, funding_ask, timeline_months, financial_file)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                  (email, idea_summary, target_audience, team_bio, ebitda, yoy_growth, ltv, cac, burn_rate, gross_margin, mrr, churn_rate, funding_ask, timeline_months, financial_file))
-        pitch_id = c.lastrowid
-        conn.commit()
-        conn.close()
-        
-        # Build & stream deck (safe except)
-        try:
-            buffer = build_pitch_deck_buffer(pitch_id, idea_summary, target_audience, team_bio, ebitda, yoy_growth, ltv, cac, burn_rate, gross_margin, mrr, churn_rate, funding_ask, timeline_months)
-            if buffer is None:
-                flash('Deck gen failed—pitch saved, but no deck. Try again.')
-                return redirect(url_for('success'))
-            return send_file(buffer, as_attachment=True, download_name=f'PitchForge_Deck_{pitch_id}.pptx',
-                             mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation')
-        except Exception as e:
-            flash(f'Deck gen error: {str(e)}—pitch saved, but no deck. Try again.')
-            return redirect(url_for('success'))
-    
-    return render_template('form.html')
-
-def polish_text(summary, ltv, cac, yoy_growth, churn_rate):
-    ratio = ltv / cac if cac else 0
-    return f"Investor-Ready Pitch: {summary}. With LTV:CAC ratio of {ratio:.1f}, {yoy_growth:.1f}% YoY growth, and {churn_rate:.1f}% churn, this delivers scalable ROI."
-
-def build_pitch_deck_buffer(pitch_id, summary, audience, team_bio, ebitda, yoy_growth, ltv, cac, burn_rate, gross_margin, mrr, churn_rate, ask, timeline):
-    prs = Presentation()
-    
-    # Slide 1: Title (header BG only, text visible)
-    slide_layout = prs.slide_layouts[0]
-    slide = prs.slides.add_slide(slide_layout)
-    bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(10), Inches(1.5))
-    bg.fill.solid()
-    bg.fill.fore_color.rgb = RGBColor(52, 73, 94)
-    bg.line.fill.background()
-    title = slide.shapes.title
-    title.text = "PitchForge Investment Deck"
-    title.text_frame.paragraphs[0].font.size = Pt(44)
-    title.text_frame.paragraphs[0].font.color.rgb = RGBColor(255, 255, 255)
-    title.text_frame.paragraphs[0].font.bold = True
-    title.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
-    subtitle = slide.placeholders[1]
-    subtitle.text = f"ID: {pitch_id} | {datetime.now().strftime('%Y-%m-%d')}"
-    subtitle.text_frame.paragraphs[0].font.size = Pt(24)
-    subtitle.text_frame.paragraphs[0].font.color.rgb = RGBColor(255, 255, 255)
-    subtitle.text_frame.paragraphs[0].font.bold = True
-    subtitle.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
-    
-    # Slide 2: Idea
-    slide_layout = prs.slide_layouts[1]
-    slide = prs.slides.add_slide(slide_layout)
-    title = slide.shapes.title
-    title.text = "The Business Idea"
-    title.text_frame.paragraphs[0].font.size = Pt(32)
-    title.text_frame.paragraphs[0].font.color.rgb = RGBColor(0, 123, 255)
-    title.text_frame.paragraphs[0].font.bold = True
-    content = slide.placeholders[1]
-    content.text = summary
-    content.text_frame.paragraphs
+                        cac_str
