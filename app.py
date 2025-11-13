@@ -90,4 +90,27 @@ FORM_HTML = '''
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Team Bio</label>
-                    <textarea class="form-control" name="team_bio
+                    <textarea class="form-control" name="team_bio" rows="2" placeholder="e.g., Experienced founders in tech & finance"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Financial Upload (Excel/CSV for auto-fill metrics)</label>
+                    <input type="file" class="form-control" name="financial_file" accept=".xlsx,.csv">
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="saas_mode">
+                    <label class="form-check-label" for="saas_mode">SaaS Model? (Shows MRR field)</label>
+                </div>
+                <div class="financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">EBITDA (last 12m, $)</label>
+                        <input type="number" class="form-control" name="ebitda" step="0.01">
+                    </div>
+                    <div class="financial-col">
+                        <label class="form-label">YoY Growth Rate (%)</label>
+                        <input type="number" class="form-control" name="yoy_growth" step="0.01">
+                    </div>
+                </div>
+                <div class="financial-row">
+                    <div class="financial-col">
+                        <label class="form-label">LTV ($)</label>
+                        <input type="
