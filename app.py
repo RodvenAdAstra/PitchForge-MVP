@@ -46,7 +46,7 @@ def init_db():
 
 init_db()
 
-# Form HTML template (embedded for simplicity)
+# Form HTML embedded
 FORM_HTML = '''
 <!DOCTYPE html>
 <html lang="en">
@@ -127,101 +127,4 @@ FORM_HTML = '''
                     </div>
                     <div class="financial-col">
                         <label class="form-label">Gross Margin (%)</label>
-                        <input type="number" class="form-control" name="gross_margin" step="0.01">
-                    </div>
-                </div>
-                <div class="mrr-group financial-row">
-                    <div class="financial-col">
-                        <label class="form-label">MRR ($)</label>
-                        <input type="number" class="form-control" name="mrr" step="0.01">
-                    </div>
-                    <div class="financial-col">
-                        <label class="form-label">Churn Rate (%)</label>
-                        <input type="number" class="form-control" name="churn_rate" step="0.01">
-                    </div>
-                </div>
-                <div class="financial-row">
-                    <div class="financial-col">
-                        <label class="form-label">Funding Ask ($)</label>
-                        <input type="number" class="form-control" name="funding_ask" step="0.01">
-                    </div>
-                    <div class="financial-col">
-                        <label class="form-label">Timeline (months)</label>
-                        <input type="number" class="form-control" name="timeline_months" min="1">
-                    </div>
-                </div>
-                <div class="form-check ai-toggle">
-                    <input class="form-check-input" type="checkbox" name="ai_polish" id="ai_polish">
-                    <label class="form-check-label" for="ai_polish">AI Polish My Summary? (Enhances for investor appeal)</label>
-                </div>
-                <button type="submit" class="btn btn-primary btn-forge w-100 py-3 fs-5">Forge It! 🚀</button>
-            </form>
-            <p class="text-center mt-4 small text-muted">Investment-ready deck generated instantly—test your pitch today.</p>
-        </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.getElementById('saas_mode').addEventListener('change', function() {
-            document.querySelector('.mrr-group').style.display = this.checked ? 'flex' : 'none';
-        });
-    </script>
-</body>
-</html>
-'''
-
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        email = request.form['email']
-        idea_summary = request.form['idea_summary']
-        target_audience = request.form.get('target_audience', '')
-        team_bio = request.form.get('team_bio', '')
-        ebitda_str = request.form.get('ebitda', '')
-        yoy_growth_str = request.form.get('yoy_growth', '')
-        ltv_str = request.form.get('ltv', '')
-        cac_str = request.form.get('cac', '')
-        burn_rate_str = request.form.get('burn_rate', '')
-        gross_margin_str = request.form.get('gross_margin', '')
-        mrr_str = request.form.get('mrr', '')
-        churn_rate_str = request.form.get('churn_rate', '')
-        funding_ask_str = request.form.get('funding_ask', '')
-        timeline_months_str = request.form.get('timeline_months', '')
-        ai_polish = request.form.get('ai_polish', 'off')
-        
-        # Validation
-        if not email or not idea_summary:
-            flash('Email and idea summary are required!')
-            return render_template_string(FORM_HTML)
-        
-        # Upload auto-fill
-        financial_file = None
-        parsed_columns = []
-        if 'financial_file' in request.files:
-            file = request.files['financial_file']
-            if file.filename:
-                filename = secure_filename(file.filename)
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(file_path)
-                financial_file = filename
-                try:
-                    df = pd.read_excel(file_path) if filename.endswith('.xlsx') else pd.read_csv(file_path)
-                    df_columns_lower = df.columns.str.lower()
-                    ebitda_match = df_columns_lower[df_columns_lower.str.contains('ebitda', case=False, na=False)].index
-                    if len(ebitda_match) > 0:
-                        col_name = df.columns[ebitda_match[0]]
-                        ebitda_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    yoy_match = df_columns_lower[df_columns_lower.str.contains('yoy growth', case=False, na=False)].index
-                    if len(yoy_match) > 0:
-                        col_name = df.columns[yoy_match[0]]
-                        yoy_growth_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    ltv_match = df_columns_lower[df_columns_lower.str.contains('ltv', case=False, na=False)].index
-                    if len(ltv_match) > 0:
-                        col_name = df.columns[ltv_match[0]]
-                        ltv_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    cac_match = df_columns_lower[df_columns_lower.str.contains('cac', case=False, na=False)].index
-                    if len(cac_match) > 0:
-                        col_name = df.columns[cac_match[0]]
-                        cac_str
+                        <input type="number" class
