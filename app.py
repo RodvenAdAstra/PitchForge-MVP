@@ -70,7 +70,7 @@ def index():
             flash('Email and idea summary are required!')
             return redirect(url_for('index'))
         
-        # Upload auto-fill (robust: str.contains for variations, get column name)
+        # Upload auto-fill
         financial_file = None
         parsed_columns = []
         if 'financial_file' in request.files:
@@ -83,7 +83,6 @@ def index():
                 try:
                     df = pd.read_excel(file_path) if filename.endswith('.xlsx') else pd.read_csv(file_path)
                     df_columns_lower = df.columns.str.lower()
-                    # Find matching column names (first match)
                     ebitda_match = df_columns_lower[df_columns_lower.str.contains('ebitda', case=False, na=False)].index
                     if len(ebitda_match) > 0:
                         col_name = df.columns[ebitda_match[0]]
@@ -102,36 +101,4 @@ def index():
                     cac_match = df_columns_lower[df_columns_lower.str.contains('cac', case=False, na=False)].index
                     if len(cac_match) > 0:
                         col_name = df.columns[cac_match[0]]
-                        cac_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    burn_match = df_columns_lower[df_columns_lower.str.contains('burn rate', case=False, na=False)].index
-                    if len(burn_match) > 0:
-                        col_name = df.columns[burn_match[0]]
-                        burn_rate_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    gross_match = df_columns_lower[df_columns_lower.str.contains('gross margin', case=False, na=False)].index
-                    if len(gross_match) > 0:
-                        col_name = df.columns[gross_match[0]]
-                        gross_margin_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    mrr_match = df_columns_lower[df_columns_lower.str.contains('mrr', case=False, na=False)].index
-                    if len(mrr_match) > 0:
-                        col_name = df.columns[mrr_match[0]]
-                        mrr_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    churn_match = df_columns_lower[df_columns_lower.str.contains('churn rate', case=False, na=False)].index
-                    if len(churn_match) > 0:
-                        col_name = df.columns[churn_match[0]]
-                        churn_rate_str = pd.to_numeric(df[col_name].iloc[0], errors='coerce')
-                        parsed_columns.append(col_name)
-                    if parsed_columns:
-                        flash(f'Parsed columns: {", ".join(parsed_columns)}—auto-filled matching metrics.')
-                    else:
-                        flash('No matching columns found—check headers (e.g., "EBITDA", "YoY Growth Rate"). Manual entry used.')
-                except Exception as e:
-                    flash(f'Upload error: {str(e)}—manual entry still works.')
-        
-        # Safe numbers (handle NaN/empty as 0)
-        ebitda = pd.to_numeric(ebitda_str, errors='coerce') or 0.0
-        yoy_growth = pd.to_numeric(yoy_growth_str, errors='coerce') or 0.0
-        ltv
+                        cac_str = pd.to_numeric(df[col_name].iloc
